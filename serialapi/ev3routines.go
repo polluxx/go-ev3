@@ -3,6 +3,7 @@ package serialapi
 import (
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"github.com/tarm/goserial"
 	"io"
 	"log"
@@ -23,14 +24,15 @@ const (
 	MaxMessageCount    = 0xFFFF
 	CommandWithReply   = 0x00
 	CommandWithNOReply = 0x80
+	ReplayOk           = 0x02
 
 	Data8   = 0x81
 	Data16  = 0x82
 	Data32  = 0x83
 	DataStr = 0x84
 
-	EV3MessageHeaderSize  = 7
-	EV3ResponseHeaderSize = 5
+	EV3MessageHeaderSize = 7
+	EV3ReplayHeaderSize  = 5
 )
 
 // Lego brick API interface
@@ -59,7 +61,7 @@ type EV3Reply struct {
 	byteCodes    []byte
 }
 
-// Functionality to wrap message entity to byte array according to specification
+// Functionality to wrap message entity to byte array conversion according to specification
 func (self *EV3Message) getBytes() []byte {
 	self.commandSize = uint16(len(self.byteCodes)) + EV3MessageHeaderSize - 2 // 2 means commandSize = uint16 that should not be counted
 	buf := make([]byte, EV3MessageHeaderSize)
@@ -71,8 +73,32 @@ func (self *EV3Message) getBytes() []byte {
 	return buf
 }
 
-// Serial over BT wrapper
+// Functionality to wrap replay entity parsing
+func getReplay(buf []byte) (*EV3Reply, error) {
+	if len(buf) < EV3ReplayHeaderSize {
+		err := errors.New("Replay buffer is too small")
+		log.Fatal(err)
+		return nil, err
+	}
+
+	reply := EV3Reply{
+		replySize:    binary.LittleEndian.Uint16(buf[0:]),
+		messageCount: binary.LittleEndian.Uint16(buf[2:]),
+		replyType:    buf[4],
+		byteCodes:    buf[5:], // TODO: Check this index is Ok in case of small reply
+	}
+
+	if reply.replyType != ReplayOk {
+		err := errors.New("Replay reported as failed")
+		log.Fatal(err)
+		return nil, err
+	}
+	return &reply, nil
+}
+
+// Serial over BT wrapper: send
 func (self *EV3) sendBytes(buf []byte) error {
+	// Open port if not open yet
 	if (self.port == nil) && (self.DebugOn == false) {
 		config := &serial.Config{Name: self.PortName, Baud: self.PortBaud}
 		var err error
@@ -88,24 +114,97 @@ func (self *EV3) sendBytes(buf []byte) error {
 		self.messageCount = 0
 	}
 
-	/*
-		buf := make([]byte, 40)
-		n, err := s.Read(buf)
-		fmt.Println("Data read")
-
-		if err != nil {
-			fmt.Println(err)
-		}
-		s.Close()
-	*/
-
-	if self.DebugOn {
-		log.Println(hex.EncodeToString(buf)) // DEBUG INFO
-		return nil
-	} else {
+	log.Println(hex.EncodeToString(buf)) // DEBUG INFO
+	if self.DebugOn == false {
 		_, err := self.port.Write(buf)
 		return err
 	}
+	return nil
+}
+
+// Serial over BT wrapper: receive
+func (self *EV3) receiveBytes() ([]byte, error) {
+	if self.DebugOn == false {
+		// Open port if not open yet
+		if self.port == nil {
+			config := &serial.Config{Name: self.PortName, Baud: self.PortBaud}
+			var err error
+			self.port, err = serial.OpenPort(config)
+			if err != nil {
+				log.Fatal(err)
+				return nil, err
+			}
+		}
+
+		// Read size of following message
+		buf := make([]byte, 2)
+		n, err := self.port.Read(buf)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		} else if n != len(buf) {
+			err = errors.New("Too few bytes read: expected replay header")
+			log.Fatal(err)
+			return nil, err
+		}
+		replySize := binary.LittleEndian.Uint16(buf)
+
+		// Read message tail
+		bufTail := make([]byte, replySize)
+		n, err = self.port.Read(bufTail)
+		if err != nil {
+			log.Fatal(err)
+			return nil, err
+		} else if n != len(bufTail) {
+			err = errors.New("Too few bytes read: expected replay tail")
+			log.Fatal(err)
+			return nil, err
+		}
+
+		// Stitch and return
+		buf = append(buf, bufTail...)
+		log.Println(hex.EncodeToString(buf)) // DEBUG INFO
+		return buf, nil
+	}
+	return make([]byte, 0), nil
+}
+
+// Close connection to brick
+func (self *EV3) Close() {
+	if self.port != nil {
+		self.port.Close()
+	}
+}
+
+// Helper routine for variable and constants size allocation
+func variablesReservation(globalSize uint8, localSize uint8) uint16 {
+	return uint16(globalSize&0xFF) | uint16(((globalSize>>8)&0x3)|((localSize<<2)&0xFC))<<8
+}
+
+// Helper routine to generate variable global index
+func getVarGlobalIndex(index int) []byte {
+	var buf []byte
+	if index <= 31 {
+		buf = make([]byte, 1)
+		buf[0] = uint8(index) | 0x60
+	} else if index <= 255 {
+		buf = make([]byte, 1)
+		buf[0] = 0xE1
+		buf[1] = uint8(index)
+	} else if index <= 65535 {
+		buf = make([]byte, 1)
+		buf[0] = 0xE2
+		buf[1] = uint8(index) & 0xFF
+		buf[2] = uint8(index>>8) & 0xFF
+	} else {
+		buf = make([]byte, 1)
+		buf[0] = 0xE3
+		buf[1] = uint8(index) & 0xFF
+		buf[2] = uint8(index>>8) & 0xFF
+		buf[3] = uint8(index>>16) & 0xFF
+		buf[4] = uint8(index>>24) & 0xFF
+	}
+	return buf
 }
 
 // Helper routines for variable and constants wrapping according to protocol specification

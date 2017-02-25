@@ -12,7 +12,7 @@
 - ~~Define a list of supported operations~~
 - ~~Implement Serial wrapper~~
 - ~~Implement command builder according to Lego protocol~~
-- Implement response parser according to Lego protocol
+- ~~Implement response parser according to Lego protocol~~
 - Implement set of Serial supported operations
 - Design REST APIs
 - Implement REST APIs
@@ -21,11 +21,17 @@
 
 ####Supported brick commands:
 - Play sound
+- Get device list
 - ~~Motor control~~
-- ~~Motor sensor~~
-- Sensors:
+- Get sensor data:
     - ~~Light~~
     - ~~Color~~
     - ~~Touch~~
-    - ~~Distance optical~~
+    - ~~Distance (optical)~~
     - ~~Gyro~~
+    - ~~Motor angle~~
+
+####Helpful links:
+- https://goo.gl/FeoZe7
+- https://goo.gl/Usm7Gr
+- https://goo.gl/0LzQqF
