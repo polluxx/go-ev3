@@ -1,14 +1,17 @@
 package serialapi
 
 import (
+	"encoding/binary"
 	"errors"
 	"log"
+	"math"
 )
 
 // Plays tone with specified params on the brick
 func (self *EV3) PlaySound(volume uint8, frequency uint16, duration uint16) error {
 	/*
-		opSOUND Opcode sound related
+		Opcode: 0x94 opSOUND
+		CMD: 0x01 TONE
 		LC0(TONE) Command (TONE) encoded as single byte constant
 		LC1(2) Sound-level 2 encoded as one constant byte to follow
 		LC2(1000) Frequency 1000 Hz. encoded as two constant bytes to follow
@@ -36,11 +39,10 @@ func (self *EV3) PlaySound(volume uint8, frequency uint16, duration uint16) erro
 // Read devices
 func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	/*
-		Opcode 0x99
+		Opcode: 0x99 opInput_Device
+		CMD: 0x05 GET_TYPEMODE
 		Arguments (Data8) CMD => Specific command parameter documented below
-		Dispatch status Unchanged
-		Description Read information about external sensor device
-		CMD description is too huge to list it here, RTFM
+		Description is too huge to list it here, RTFM
 		Example:
 		45000100001000990500820000606199050082010062639905008202006465990500820300666799050082100068699905008211006a6b9905008212006c6d9905008213006e6f
 		13000100027e007e007e007e007e007e007e007e00
@@ -127,8 +129,61 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	return &portsStatus, nil
 }
 
-// Start motor
-// Read motor angle
 // Read color
+// TODO: Refactor to generic get value function. Overload with different sensor types.
+func (self *EV3) GetColorValue(port uint8) (uint8, error) {
+	/*
+		Opcode: 0x99 opInput_Device
+		CMD: 0x1D READY_SI
+		Example:
+		0d000000000400991d000400020160
+		__NO-SENSOR-TO-CHECK__ 07000100020000A040
+	*/
+
+	sensorMode := uint8(0x02) // Get color
+	buf := make([]byte, 0)
+	buf = append(buf, 0x99, 0x1D, 0x00, port, 0x00, sensorMode, 0x01)
+	buf = append(buf, getVarGlobalIndex(0)...)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithReply,
+		variablesReservation: variablesReservation(4, 0),
+		byteCodes:            buf,
+	}
+	err := self.sendBytes(msg.getBytes())
+
+	// Receive response, check msg count & parse result
+	if err != nil {
+		return 0, err
+	}
+	buf, err = self.receiveBytes()
+	//buf, err =  hex.DecodeString("07000000020000A040")	// TODO: Remove debug line
+	if err != nil {
+		return 0, err
+	}
+	rep, err := getReplay(buf)
+	if err != nil {
+		return 0, err
+	}
+	if rep.messageCount != msg.messageCount {
+		err = errors.New("Received replay to another message")
+		log.Fatal(err)
+		return 0, err
+	}
+	if len(rep.byteCodes) != 4 {
+		err = errors.New("Received replay contains not enough data")
+		log.Fatal(err)
+		return 0, err
+	}
+
+	// Parse response
+	intVal := binary.LittleEndian.Uint32(rep.byteCodes)
+	floatVal := math.Float32frombits(intVal)
+	return uint8(floatVal), nil
+}
+
 // Read luminosity
 // Read distance
+// Read motor angle
+// Start motor

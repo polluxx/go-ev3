@@ -11,16 +11,20 @@ import (
 
 // Lego brick constants
 const (
-	MotorPortA int = iota
+	MotorPortA uint8 = iota
 	MotorPortB
 	MotorPortC
 	MotorPortD
+)
 
-	SensorPort1
+const (
+	SensorPort1 uint8 = iota
 	SensorPort2
 	SensorPort3
 	SensorPort4
+)
 
+const (
 	MaxMessageCount    = 0xFFFF
 	CommandWithReply   = 0x00
 	CommandWithNOReply = 0x80
