@@ -22,14 +22,19 @@
 ####Supported brick commands:
 - Play sound
 - Get device list
-- ~~Motor control~~
+- Motor control:
+    - Start
+    - Stop
+    - Speed mode
+    - Angle mode
+    - ~~Time mode~~
+    - ~~Get angle~~
 - Get sensor data:
     - ~~Light~~
     - Color
     - ~~Touch~~
     - ~~Distance (optical)~~
     - ~~Gyro~~
-    - ~~Motor angle~~
 
 ####Helpful links:
 - https://goo.gl/FeoZe7

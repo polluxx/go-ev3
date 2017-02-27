@@ -36,6 +36,68 @@ func (self *EV3) PlaySound(volume uint8, frequency uint16, duration uint16) erro
 	return self.sendBytes(msg.getBytes())
 }
 
+// Motor movement controls below
+
+func (self *EV3) MoveMotorStop(ports uint8, brake uint8) error {
+	buf := make([]byte, 0)
+	buf = append(buf, 0xA3/*opOutput_Step_Speed*/, 0x00/*module id*/, ports, brake)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithNOReply,
+		variablesReservation: 0x00,
+		byteCodes:            buf,
+	}
+	return self.sendBytes(msg.getBytes())
+}
+
+func (self *EV3) MoveMotorStart(ports uint8) error {
+	buf := make([]byte, 0)
+	buf = append(buf, 0xA6/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithNOReply,
+		variablesReservation: 0x00,
+		byteCodes:            buf,
+	}
+	return self.sendBytes(msg.getBytes())
+}
+
+func (self *EV3) MoveMotorSpeed(ports uint8, speed int8) error {
+	buf := make([]byte, 0)
+	buf = append(buf, 0xA5/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+	buf = append(buf, LC8(uint8(speed))...)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithNOReply,
+		variablesReservation: 0x00,
+		byteCodes:            buf,
+	}
+	return self.sendBytes(msg.getBytes())
+}
+
+// MoveMotorTime
+func (self *EV3) MoveMotorAngle(ports uint8, speed int8, angle int32) error {
+	buf := make([]byte, 0)
+	buf = append(buf, 0xAE/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+	buf = append(buf, LC8(uint8(speed))...)
+	buf = append(buf, )
+	buf = append(buf, LC32(0/*immediate start*/)...)
+	buf = append(buf, LC32(uint32(angle)/*angle*/)...)
+	buf = append(buf, LC32(0/*immediate stop*/)...)
+	buf = append(buf, 0x00/*don't apply brake*/)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithNOReply,
+		variablesReservation: 0x00,
+		byteCodes:            buf,
+	}
+	return self.sendBytes(msg.getBytes())
+}
+
 // Read devices
 func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	/*

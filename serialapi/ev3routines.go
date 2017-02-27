@@ -11,10 +11,10 @@ import (
 
 // Lego brick constants
 const (
-	MotorPortA uint8 = iota
-	MotorPortB
-	MotorPortC
-	MotorPortD
+	MotorPortA uint8 = 0x01
+	MotorPortB = 0x02
+	MotorPortC = 0x04
+	MotorPortD = 0x08
 )
 
 const (
