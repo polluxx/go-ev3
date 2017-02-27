@@ -131,7 +131,7 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 
 // Read color
 // TODO: Refactor to generic get value function. Overload with different sensor types.
-func (self *EV3) GetColorValue(port uint8) (uint8, error) {
+func (self *EV3) GetColorValue(port uint8) (*Color, error) {
 	/*
 		Opcode: 0x99 opInput_Device
 		CMD: 0x1D READY_SI
@@ -155,32 +155,31 @@ func (self *EV3) GetColorValue(port uint8) (uint8, error) {
 
 	// Receive response, check msg count & parse result
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	buf, err = self.receiveBytes()
-	//buf, err =  hex.DecodeString("07000000020000A040")	// TODO: Remove debug line
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	rep, err := getReplay(buf)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if rep.messageCount != msg.messageCount {
 		err = errors.New("Received replay to another message")
 		log.Fatal(err)
-		return 0, err
+		return nil, err
 	}
 	if len(rep.byteCodes) != 4 {
 		err = errors.New("Received replay contains not enough data")
 		log.Fatal(err)
-		return 0, err
+		return nil, err
 	}
 
 	// Parse response
 	intVal := binary.LittleEndian.Uint32(rep.byteCodes)
 	floatVal := math.Float32frombits(intVal)
-	return uint8(floatVal), nil
+	return &Color{uint8(floatVal)}, nil
 }
 
 // Read luminosity

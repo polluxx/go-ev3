@@ -10,11 +10,19 @@ func main() {
 	fmt.Println("EV3 API demo")
 
 	ev3 := serialapi.EV3{
-		PortName: "/dev/rfcomm2",
+		PortName: "/dev/rfcomm3",
 		PortBaud: 9600,
-		DebugOn:  true,
+		//DebugOn:  true,
 	}
 	ev3.PlaySound(2, 1000, 1000)
-	//ev3.GetPortsStatus()
-	//ev3.GetColorValue(serialapi.SensorPort1)
+
+	/*
+	portsStatus, _ := ev3.GetPortsStatus()
+	fmt.Printf("%v", col)
+	*/
+
+	/*
+	col, _ := ev3.GetColorValue(serialapi.SensorPort2)
+	fmt.Printf("%v", col)
+	*/
 }

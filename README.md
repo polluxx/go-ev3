@@ -25,7 +25,7 @@
 - ~~Motor control~~
 - Get sensor data:
     - ~~Light~~
-    - ~~Color~~
+    - Color
     - ~~Touch~~
     - ~~Distance (optical)~~
     - ~~Gyro~~
