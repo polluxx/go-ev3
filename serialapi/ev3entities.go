@@ -2,7 +2,7 @@ package serialapi
 
 // Brick port entity
 type EV3Port struct {
-	Type uint8
+	Type string
 	Mode uint8
 }
 
@@ -19,12 +19,35 @@ type EV3PortsStatus struct {
 	MotorPortD EV3Port
 }
 
+// Returns human readable DeviceType
+func DeviceType(value uint8) string {
+	switch value {
+	case 7:
+		return "Big motor"
+	case 8:
+		return "Medium motor"
+	case 16:
+		return "Touch sensor"
+	case 29:
+		return "Color sensor"
+	case 30:
+		return "Ultrasonic sensor"
+	case 32:
+		return "Gyro sensor"
+	case 0x7e:
+		return "Empty"
+	}
+	return "Unknown"
+}
+
+// Color sensor output entity
 type Color struct {
 	Value uint8
 }
 
-func (self *Color) String() string {
-	switch self.Value {
+// Returns human readable Color
+func ColorString(value uint8) string {
+	switch value {
 	case 1:
 		return "Black"
 	case 2:

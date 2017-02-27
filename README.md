@@ -14,7 +14,7 @@
 - ~~Implement command builder according to Lego protocol~~
 - ~~Implement response parser according to Lego protocol~~
 - Implement set of Serial supported operations
-- Design REST APIs
+- ~~Design REST APIs~~
 - Implement REST APIs
 - Cover by UT
 - Provide integration documentation

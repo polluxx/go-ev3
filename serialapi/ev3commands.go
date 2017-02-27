@@ -107,7 +107,7 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 		Description is too huge to list it here, RTFM
 		Example:
 		45000100001000990500820000606199050082010062639905008202006465990500820300666799050082100068699905008211006a6b9905008212006c6d9905008213006e6f
-		13000100027e007e007e007e007e007e007e007e00
+		13000100021000210020001d00070008007e007e00
 	*/
 
 	// Prepare message to check all 8 ports at once
@@ -158,33 +158,37 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	// Parse response for all 8 ports
 	portsStatus := EV3PortsStatus{}
 	var portType, portMode uint8
+	var portTypeStr string
+
 	for i := 0; i < 8; i++ {
 		portType = rep.byteCodes[i*2]
 		portMode = rep.byteCodes[i*2+1]
+
+		portTypeStr = DeviceType(portType)
 		switch i {
 		case 0:
-			portsStatus.SensorPort1.Type = portType
+			portsStatus.SensorPort1.Type = portTypeStr
 			portsStatus.SensorPort1.Mode = portMode
 		case 1:
-			portsStatus.SensorPort2.Type = portType
+			portsStatus.SensorPort2.Type = portTypeStr
 			portsStatus.SensorPort2.Mode = portMode
 		case 2:
-			portsStatus.SensorPort3.Type = portType
+			portsStatus.SensorPort3.Type = portTypeStr
 			portsStatus.SensorPort3.Mode = portMode
 		case 3:
-			portsStatus.SensorPort4.Type = portType
+			portsStatus.SensorPort4.Type = portTypeStr
 			portsStatus.SensorPort4.Mode = portMode
 		case 4:
-			portsStatus.MotorPortA.Type = portType
+			portsStatus.MotorPortA.Type = portTypeStr
 			portsStatus.MotorPortA.Mode = portMode
 		case 5:
-			portsStatus.MotorPortB.Type = portType
+			portsStatus.MotorPortB.Type = portTypeStr
 			portsStatus.MotorPortB.Mode = portMode
 		case 6:
-			portsStatus.MotorPortC.Type = portType
+			portsStatus.MotorPortC.Type = portTypeStr
 			portsStatus.MotorPortC.Mode = portMode
 		case 7:
-			portsStatus.MotorPortD.Type = portType
+			portsStatus.MotorPortD.Type = portTypeStr
 			portsStatus.MotorPortD.Mode = portMode
 		}
 	}
@@ -199,12 +203,13 @@ func (self *EV3) GetColor(port uint8) (*Color, error) {
 		CMD: 0x1D READY_SI
 		Example:
 		0d000000000400991d000400020160
-		__NO-SENSOR-TO-CHECK__ 07000100020000A040
+		07000100020000A040
 	*/
 
 	sensorMode := uint8(0x02) // Get color
+
 	buf := make([]byte, 0)
-	buf = append(buf, 0x99, 0x1D, 0x00, port, 0x00, sensorMode, 0x01)
+	buf = append(buf, 0x99, 0x1D/*READY_SI*/, 0x00/*LAYER*/, port, 0x00/*TYPE*/, sensorMode, 0x01/*Number of return values */)
 	buf = append(buf, getVarGlobalIndex(0)...)
 
 	msg := EV3Message{
