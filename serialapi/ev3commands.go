@@ -131,7 +131,7 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 
 // Read color
 // TODO: Refactor to generic get value function. Overload with different sensor types.
-func (self *EV3) GetColorValue(port uint8) (*Color, error) {
+func (self *EV3) GetColor(port uint8) (*Color, error) {
 	/*
 		Opcode: 0x99 opInput_Device
 		CMD: 0x1D READY_SI
@@ -184,5 +184,6 @@ func (self *EV3) GetColorValue(port uint8) (*Color, error) {
 
 // Read luminosity
 // Read distance
+// Read switch
 // Read motor angle
 // Start motor

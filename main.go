@@ -22,7 +22,7 @@ func main() {
 	*/
 
 	/*
-	col, _ := ev3.GetColorValue(serialapi.SensorPort2)
+	col, _ := ev3.GetColor(serialapi.SensorPort2)
 	fmt.Printf("%v", col)
 	*/
 }
