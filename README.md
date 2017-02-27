@@ -13,9 +13,9 @@
 - ~~Implement Serial wrapper~~
 - ~~Implement command builder according to Lego protocol~~
 - ~~Implement response parser according to Lego protocol~~
-- Implement set of Serial supported operations
+- ~~Implement set of Serial supported operations~~
 - ~~Design REST APIs~~
-- Implement REST APIs
+- ~~Implement REST APIs~~
 - Cover by UT
 - Provide integration documentation
 
@@ -27,16 +27,37 @@
     - Stop
     - Speed mode
     - Angle mode
-    - ~~Time mode~~
-    - ~~Get angle~~
+    - _Time mode*_
+    - _Get angle*_
 - Get sensor data:
-    - ~~Light~~
+    - Light
     - Color
-    - ~~Touch~~
-    - ~~Distance (optical)~~
-    - ~~Gyro~~
+    - Touch
+    - Distance
+    - Gyro
+    
+_* testing is pending_
 
 ####Helpful links:
 - https://goo.gl/FeoZe7
 - https://goo.gl/Usm7Gr
 - https://goo.gl/0LzQqF
+
+####Rest API routes:
+	GET /ports
+
+	POST /sound/{volume}/frequency/{frequency}/duration/{duration}
+
+	POST /motors/{port}/start
+	POST /motors/{port}/stop/{brake}
+	POST /motors/{port}/speed/{speed}
+	GET /motors/{port}
+
+	GET /sensors/{port}/color
+	GET /sensors/{port}/luminosity
+	GET /sensors/{port}/distance
+	GET /sensors/{port}/click
+	GET /sensors/{port}/clickcount
+	GET /sensors/{port}/gyro/angle
+	GET /sensors/{port}/gyro/gravity
+	GET /sensors/{port}

@@ -9,20 +9,8 @@ import (
 
 // Plays tone with specified params on the brick
 func (self *EV3) PlaySound(volume uint8, frequency uint16, duration uint16) error {
-	/*
-		Opcode: 0x94 opSOUND
-		CMD: 0x01 TONE
-		LC0(TONE) Command (TONE) encoded as single byte constant
-		LC1(2) Sound-level 2 encoded as one constant byte to follow
-		LC2(1000) Frequency 1000 Hz. encoded as two constant bytes to follow
-		LC2(1000) Duration 1000 mS. encoded as two constant bytes to follow
-		Example:
-		0f0000008000009401810282e80382e803
-	*/
-
-	buf := make([]byte, 2)
-	buf[0] = 0x94 // opSound
-	buf[1] = 0x01 // type TONE, 3 params: 8, 16, 16
+	buf := make([]byte, 0)
+	buf = append(buf, 0x94 /*opSOUND*/, 0x01 /*type TONE*/)
 	buf = append(buf, LC8(volume)...)
 	buf = append(buf, LC16(frequency)...)
 	buf = append(buf, LC16(duration)...)
@@ -36,11 +24,10 @@ func (self *EV3) PlaySound(volume uint8, frequency uint16, duration uint16) erro
 	return self.sendBytes(msg.getBytes())
 }
 
-// Motor movement controls below
-
+// Stop motor on specific port(s)
 func (self *EV3) MoveMotorStop(ports uint8, brake uint8) error {
 	buf := make([]byte, 0)
-	buf = append(buf, 0xA3/*opOutput_Step_Speed*/, 0x00/*module id*/, ports, brake)
+	buf = append(buf, 0xA3 /*opOutput_Step_Speed*/, 0x00 /*module id*/, ports, brake)
 
 	msg := EV3Message{
 		messageCount:         self.messageCount,
@@ -51,9 +38,10 @@ func (self *EV3) MoveMotorStop(ports uint8, brake uint8) error {
 	return self.sendBytes(msg.getBytes())
 }
 
+// Start motor on specific port(s)
 func (self *EV3) MoveMotorStart(ports uint8) error {
 	buf := make([]byte, 0)
-	buf = append(buf, 0xA6/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+	buf = append(buf, 0xA6 /*opOutput_Step_Speed*/, 0x00 /*module id*/, ports)
 
 	msg := EV3Message{
 		messageCount:         self.messageCount,
@@ -64,9 +52,10 @@ func (self *EV3) MoveMotorStart(ports uint8) error {
 	return self.sendBytes(msg.getBytes())
 }
 
+// Set and maintain motor speed on specific port(s)
 func (self *EV3) MoveMotorSpeed(ports uint8, speed int8) error {
 	buf := make([]byte, 0)
-	buf = append(buf, 0xA5/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+	buf = append(buf, 0xA5 /*opOutput_Step_Speed*/, 0x00 /*module id*/, ports)
 	buf = append(buf, LC8(uint8(speed))...)
 
 	msg := EV3Message{
@@ -78,16 +67,34 @@ func (self *EV3) MoveMotorSpeed(ports uint8, speed int8) error {
 	return self.sendBytes(msg.getBytes())
 }
 
-// MoveMotorTime
-func (self *EV3) MoveMotorAngle(ports uint8, speed int8, angle int32) error {
+// Move motor for set angle on specific port(s)
+func (self *EV3) MoveMotorAngle(ports uint8, speed int8, angle int32, brake uint8) error {
 	buf := make([]byte, 0)
-	buf = append(buf, 0xAE/*opOutput_Step_Speed*/, 0x00/*module id*/, ports)
+	buf = append(buf, 0xAE /*opOutput_Step_Speed*/, 0x00 /*module id*/, ports)
 	buf = append(buf, LC8(uint8(speed))...)
-	buf = append(buf, )
-	buf = append(buf, LC32(0/*immediate start*/)...)
-	buf = append(buf, LC32(uint32(angle)/*angle*/)...)
-	buf = append(buf, LC32(0/*immediate stop*/)...)
-	buf = append(buf, 0x00/*don't apply brake*/)
+	buf = append(buf, LC32(0 /*immediate start*/)...)
+	buf = append(buf, LC32(uint32(angle))...)
+	buf = append(buf, LC32(0 /*immediate stop*/)...)
+	buf = append(buf, brake)
+
+	msg := EV3Message{
+		messageCount:         self.messageCount,
+		commandType:          CommandWithNOReply,
+		variablesReservation: 0x00,
+		byteCodes:            buf,
+	}
+	return self.sendBytes(msg.getBytes())
+}
+
+// Move motor for set time on specific port(s)
+func (self *EV3) MoveMotorTime(ports uint8, speed int8, timeMs int32, brake uint8) error {
+	buf := make([]byte, 0)
+	buf = append(buf, 0xAF /*opOutput_Time_Speed*/, 0x00 /*module id*/, ports)
+	buf = append(buf, LC8(uint8(speed))...)
+	buf = append(buf, LC32(0 /*immediate start*/)...)
+	buf = append(buf, LC32(uint32(timeMs))...)
+	buf = append(buf, LC32(0 /*immediate stop*/)...)
+	buf = append(buf, brake)
 
 	msg := EV3Message{
 		messageCount:         self.messageCount,
@@ -100,16 +107,6 @@ func (self *EV3) MoveMotorAngle(ports uint8, speed int8, angle int32) error {
 
 // Read devices
 func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
-	/*
-		Opcode: 0x99 opInput_Device
-		CMD: 0x05 GET_TYPEMODE
-		Arguments (Data8) CMD => Specific command parameter documented below
-		Description is too huge to list it here, RTFM
-		Example:
-		45000100001000990500820000606199050082010062639905008202006465990500820300666799050082100068699905008211006a6b9905008212006c6d9905008213006e6f
-		13000100021000210020001d00070008007e007e00
-	*/
-
 	// Prepare message to check all 8 ports at once
 	buf := make([]byte, 0)
 	for i := 0; i < 8; i++ {
@@ -163,8 +160,8 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	for i := 0; i < 8; i++ {
 		portType = rep.byteCodes[i*2]
 		portMode = rep.byteCodes[i*2+1]
-
-		portTypeStr = DeviceType(portType)
+		// Convert to awesome string format
+		portTypeStr = DeviceTypeStr(portType)
 		switch i {
 		case 0:
 			portsStatus.SensorPort1.Type = portTypeStr
@@ -195,21 +192,10 @@ func (self *EV3) GetPortsStatus() (*EV3PortsStatus, error) {
 	return &portsStatus, nil
 }
 
-// Read color
-// TODO: Refactor to generic get value function. Overload with different sensor types.
-func (self *EV3) GetColor(port uint8) (*Color, error) {
-	/*
-		Opcode: 0x99 opInput_Device
-		CMD: 0x1D READY_SI
-		Example:
-		0d000000000400991d000400020160
-		07000100020000A040
-	*/
-
-	sensorMode := uint8(0x02) // Get color
-
+// Read sensor value
+func (self *EV3) GetSensorValue(port uint8, sensorMode uint8) (uint8, error) {
 	buf := make([]byte, 0)
-	buf = append(buf, 0x99, 0x1D/*READY_SI*/, 0x00/*LAYER*/, port, 0x00/*TYPE*/, sensorMode, 0x01/*Number of return values */)
+	buf = append(buf, 0x99 /*opInput_Device*/, 0x1D /*READY_SI*/, 0x00 /*LAYER*/, port, 0x00 /*TYPE*/, sensorMode, 0x01 /*Number of return values */)
 	buf = append(buf, getVarGlobalIndex(0)...)
 
 	msg := EV3Message{
@@ -222,35 +208,76 @@ func (self *EV3) GetColor(port uint8) (*Color, error) {
 
 	// Receive response, check msg count & parse result
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	buf, err = self.receiveBytes()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	rep, err := getReplay(buf)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	if rep.messageCount != msg.messageCount {
 		err = errors.New("Received replay to another message")
 		log.Fatal(err)
-		return nil, err
+		return 0, err
 	}
 	if len(rep.byteCodes) != 4 {
 		err = errors.New("Received replay contains not enough data")
 		log.Fatal(err)
-		return nil, err
+		return 0, err
 	}
 
 	// Parse response
 	intVal := binary.LittleEndian.Uint32(rep.byteCodes)
 	floatVal := math.Float32frombits(intVal)
-	return &Color{uint8(floatVal)}, nil
+	return uint8(floatVal), nil
+}
+
+// Read light reflection
+func (self *EV3) GetLightReflection(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x00)
 }
 
 // Read luminosity
+func (self *EV3) GetLuminosity(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x01)
+}
+
+// Read color
+func (self *EV3) GetColor(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x02)
+}
+
+// Read is clicked
+func (self *EV3) GetIsClicked(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x00)
+}
+
+// Read click cound
+func (self *EV3) GetClickCount(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x01)
+}
+
 // Read distance
-// Read switch
-// Read motor angle
-// Start motor
+func (self *EV3) GetDistance(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x00)
+}
+
+// Read gyro angle
+func (self *EV3) GetGyroAngle(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x00)
+}
+
+// Read gyro gravity
+func (self *EV3) GetGyroGravity(port uint8) (uint8, error) {
+	return self.GetSensorValue(port, 0x01)
+}
+
+// Get current motor rotot angle
+func (self *EV3) GetMotorAngle(port uint8) (uint8, error) {
+	// 16=PortA, 17=PortB, 18=PortC, 19=PortD
+	// 0=angle, 1=rotation count, 2=power
+	return self.GetSensorValue(uint8(0x0F+port), 0x00)
+}

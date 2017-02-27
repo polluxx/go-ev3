@@ -12,9 +12,9 @@ import (
 // Lego brick constants
 const (
 	MotorPortA uint8 = 0x01
-	MotorPortB = 0x02
-	MotorPortC = 0x04
-	MotorPortD = 0x08
+	MotorPortB       = 0x02
+	MotorPortC       = 0x04
+	MotorPortD       = 0x08
 )
 
 const (
@@ -89,7 +89,7 @@ func getReplay(buf []byte) (*EV3Reply, error) {
 		replySize:    binary.LittleEndian.Uint16(buf[0:]),
 		messageCount: binary.LittleEndian.Uint16(buf[2:]),
 		replyType:    buf[4],
-		byteCodes:    buf[5:], // TODO: Check this index is Ok in case of small reply
+		byteCodes:    buf[5:],
 	}
 
 	if reply.replyType != ReplayOk {

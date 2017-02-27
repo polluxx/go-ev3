@@ -1,34 +1,34 @@
 {
-  "SensorPort1":{
-    "Type":"Touch sensor",
-    "Mode":0
+  "SensorPort1": {
+    "Type": "Optical distance sensor",
+    "Mode": 0
   },
-  "SensorPort2":{
-    "Type":"Unknown",
-    "Mode":0
+  "SensorPort2": {
+    "Type": "Touch sensor",
+    "Mode": 0
   },
-  "SensorPort3":{
-    "Type":"Gyro sensor",
-    "Mode":0
+  "SensorPort3": {
+    "Type": "Color sensor",
+    "Mode": 1
   },
-  "SensorPort4":{
-    "Type":"Color sensor",
-    "Mode":0
+  "SensorPort4": {
+    "Type": "Gyro sensor",
+    "Mode": 1
   },
-  "MotorPortA":{
-    "Type":"Big motor",
-    "Mode":0
+  "MotorPortA": {
+    "Type": "Big motor",
+    "Mode": 0
   },
-  "MotorPortB":{
-    "Type":"Medium motor",
-    "Mode":0
+  "MotorPortB": {
+    "Type": "Medium motor",
+    "Mode": 0
   },
-  "MotorPortC":{
-    "Type":"Empty",
-    "Mode":0
+  "MotorPortC": {
+    "Type": "Empty",
+    "Mode": 0
   },
-  "MotorPortD":{
-    "Type":"Empty",
-    "Mode":0
+  "MotorPortD": {
+    "Type": "Empty",
+    "Mode": 0
   }
 }
