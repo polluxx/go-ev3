@@ -22,6 +22,8 @@
  - if all is OK, you will see [bin] folder
     - cd bin
     - ./ev3-handle (to start app)
+    
+- Good ideas about the package [Design](https://www.goinggo.net/2017/02/package-oriented-design.html) philosophy
 
 
 ####Project targets:
