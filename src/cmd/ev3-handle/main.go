@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"go-ev3/serialapi"
+	"cmd/serialapi"
 	"log"
 	"net/http"
 )

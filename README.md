@@ -1,5 +1,29 @@
 #Lego EV3 REST API @ Go
 
+####Installation:
+- Download [Go](http://golang.org/dl/)
+- Setup the $GOPATH: (you can setup in the other folder, up to you)
+    - cd $HOME
+    - mkdir gocode
+    - cd gocode
+    - mkdir src
+    - mkdir bin
+    - nano .bash_profile : 
+        - export GOPATH=“$HOME/gocode”
+        - export PATH=$PATH:$GOPATH/bin 
+ - Get the GB package:
+    - go get -u github.com/constabulary/gb/...
+    
+ - Install dependencies:
+    - cd [PROJECT_ROOT]/src
+    - gb vendor restore
+    - (CTRL-C to exit manually, if command don't exit after install)
+ - gb build all
+ - if all is OK, you will see [bin] folder
+    - cd bin
+    - ./ev3-handle (to start app)
+
+
 ####Project targets:
 - Deliver fast and easy Lego EV3 module communication API
 - Export REST API for integration with 3rd-party applications

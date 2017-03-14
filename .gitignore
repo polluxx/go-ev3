@@ -3,3 +3,6 @@
 *.pem
 
 .idea/*
+/vendor/src
+/bin
+/pkg

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"go-ev3/serialapi"
+	"cmd/serialapi"
 	"net/http"
 	"strconv"
 )
